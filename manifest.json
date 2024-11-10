@@ -1,17 +1,19 @@
 {
   "manifest_version": 2,
   "name": "Popcorn Chomper",
-  "version": "1.2",
+  "version": "1.3",
   "description": "This extension block all the bad sites that are contributed by the community",
   "icons": {
     "48": "icons/favicon.png"
   },
   "permissions": [
-	"<all_urls>",
+    "<all_urls>",
     "webRequest",
     "webRequestBlocking"
   ],
   "background": {
-    "scripts": ["popcorn_chomper.js"]
+    "scripts": [
+      "popcorn_chomper.js"
+    ]
   }
 }
