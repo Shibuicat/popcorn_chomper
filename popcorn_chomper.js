@@ -15,6 +15,8 @@ const blockedDomainsObj = {
   "manhwa-raw.com": true,
   "manga18.club": true,
   "mangabuddy.com": true,
+  "www.toongod.org": true,
+  "manhwaden.com": true
 };
 
 function blockThumbnailImage(requestDetails) {
