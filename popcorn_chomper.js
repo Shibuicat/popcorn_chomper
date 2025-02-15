@@ -20,7 +20,19 @@ const blockedDomainsObj = {
   "missav.com": true,
   "missav.ws": true,
   "123av.com": true,
-  "missav123.com": true
+  "missav123.com": true,
+};
+
+const patterns = {
+  "missav": true,
+  "123": true,
+  "porn": true,
+  "manga": true,
+  "manhwa": true,
+  "hentai": true,
+  "jav": true,
+  "sex": true,
+  "vlxx": true
 };
 
 function blockThumbnailImage(requestDetails) {
@@ -31,6 +43,14 @@ function blockThumbnailImage(requestDetails) {
       cancel: true,
     };
   }
+
+  patterns.forEach((element) => {
+    if (hostname.includes(element)) {
+      return {
+        cancel: true,
+      };
+    }
+  });
 }
 
 browser.webRequest.onBeforeRequest.addListener(
