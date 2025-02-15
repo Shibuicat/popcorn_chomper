@@ -25,15 +25,15 @@ const blockedDomainsObj = {
 };
 
 const patterns = {
-  "missav": true,
-  "123": true,
-  "porn": true,
-  "manga": true,
-  "manhwa": true,
-  "hentai": true,
-  "jav": true,
-  "sex": true,
-  "vlxx": true
+  missav: true,
+  123: true,
+  porn: true,
+  manga: true,
+  manhwa: true,
+  hentai: true,
+  jav: true,
+  sex: true,
+  vlxx: true,
 };
 
 function blockThumbnailImage(requestDetails) {
@@ -45,15 +45,12 @@ function blockThumbnailImage(requestDetails) {
     };
   }
 
-  patterns.forEach((prop) => {
-    if (Object.prototype.hasOwnProperty.call(patterns, prop)) {  
-      if (hostname.includes(prop)) {
-        return {
-          cancel: true,
-        };
-      }
-    }
-  });
+  const patternFoundIndex = Object.keys(patterns).findIndex(x => hostname.includes(x));
+  if(patternFoundIndex >= 0){
+    return {
+      cancel: true
+    };
+  }
 }
 
 browser.webRequest.onBeforeRequest.addListener(
