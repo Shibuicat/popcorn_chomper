@@ -21,7 +21,7 @@ const blockedDomainsObj = {
   "missav123.com": true,
   "x.com": true,
   "twitter.com": true,
-  "mangadna.com": true,,
+  "mangadna.com": true,
 };
 
 const patterns = {
