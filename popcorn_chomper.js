@@ -44,11 +44,13 @@ function blockThumbnailImage(requestDetails) {
     };
   }
 
-  patterns.forEach((element) => {
-    if (hostname.includes(element)) {
-      return {
-        cancel: true,
-      };
+  patterns.forEach((prop) => {
+    if (Object.prototype.hasOwnProperty.call(patterns, prop)) {  
+      if (hostname.includes(prop)) {
+        return {
+          cancel: true,
+        };
+      }
     }
   });
 }
