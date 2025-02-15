@@ -1,5 +1,3 @@
-const blockedDomains = {};
-
 const blockedDomainsObj = {
   "xem.vn": true,
   "mangapark.io": true,
@@ -21,6 +19,9 @@ const blockedDomainsObj = {
   "missav.ws": true,
   "123av.com": true,
   "missav123.com": true,
+  "x.com": true,
+  "twitter.com": true,
+  "mangadna.com": true,,
 };
 
 const patterns = {
