@@ -1,5 +1,3 @@
-const blockedDomains = {};
-
 const blockedDomainsObj = {
   "xem.vn": true,
   "mangapark.io": true,
@@ -20,7 +18,10 @@ const blockedDomainsObj = {
   "missav.com": true,
   "missav.ws": true,
   "123av.com": true,
-  "missav123.com": true
+  "missav123.com": true,
+  "x.com": true,
+  "twitter.com": true,
+  "mangadna.com": true,
 };
 
 function blockThumbnailImage(requestDetails) {
@@ -29,6 +30,11 @@ function blockThumbnailImage(requestDetails) {
   if (blockedDomainsObj[hostname]) {
     return {
       cancel: true,
+    };
+  }
+  if(hostname.indexOf("manhwa") > -1 || hostname.indexOf("manga") > -1){
+    return {
+      cancel: true
     };
   }
 }
