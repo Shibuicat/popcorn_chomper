@@ -16,7 +16,11 @@ const blockedDomainsObj = {
   "manga18.club": true,
   "mangabuddy.com": true,
   "www.toongod.org": true,
-  "manhwaden.com": true
+  "manhwaden.com": true,
+  "missav.com": true,
+  "missav.ws": true,
+  "123av.com": true,
+  "missav123.com": true
 };
 
 function blockThumbnailImage(requestDetails) {
