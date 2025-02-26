@@ -34,6 +34,13 @@ const patterns = {
   jav: true,
   sex: true,
   vlxx: true,
+  hamster: true,
+  spank: true,
+  thiendia: true,
+  nangcuc: true,
+  jable: true,
+  top1: true,
+  quaylen: true 
 };
 
 function blockThumbnailImage(requestDetails) {
