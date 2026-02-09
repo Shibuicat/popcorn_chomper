@@ -27,8 +27,8 @@ const blockedDomainsObj = {
 };
 
 const known_social_media_sites = {
-  "reddit.com",
-  "www.reddit.com",
+  "reddit.com": true,
+  "www.reddit.com": true,
   "youtube.com": true,
   "www.youtube.com": true,
   "m.youtube.com": true,
