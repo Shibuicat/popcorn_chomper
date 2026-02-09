@@ -22,7 +22,22 @@ const blockedDomainsObj = {
   "x.com": true,
   "twitter.com": true,
   "mangadna.com": true,
+  "njavtv.com": true,
+  "missav.ai": true,
 };
+
+const known_social_media_sites = {
+  "reddit.com",
+  "www.reddit.com",
+  "youtube.com": true,
+  "www.youtube.com": true,
+  "m.youtube.com": true,
+  "fb.com": true,
+  "facebook.com": true,
+  "m.facebook.com": true,
+  "instagram.com": true,
+  "tiktok.com": true
+}
 
 const patterns = {
   missav: true,
@@ -58,6 +73,25 @@ function blockThumbnailImage(requestDetails) {
       cancel: true
     };
   }
+
+  if(known_social_media_sites[hostname]){    
+    const currentDate = new Date();
+    if(is_restricted_time(currentDate)){
+      return {
+        cancel: true
+      }
+    }
+  }
+}
+
+function is_restricted_time(date){  
+  const hour = date.getHours();
+   
+  if(hour == 12 || (hour >= 6 && hour <= 8)){
+    return false;
+  }
+  
+  return true;
 }
 
 browser.webRequest.onBeforeRequest.addListener(
