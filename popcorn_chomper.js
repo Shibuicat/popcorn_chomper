@@ -33,10 +33,12 @@ const known_social_media_sites = {
   "www.youtube.com": true,
   "m.youtube.com": true,
   "fb.com": true,
+  "www.facebook.com": true,
   "facebook.com": true,
   "m.facebook.com": true,
   "instagram.com": true,
-  "tiktok.com": true
+  "tiktok.com": true,
+  "www.instagram.com": true
 }
 
 const patterns = {
@@ -74,24 +76,11 @@ function blockThumbnailImage(requestDetails) {
     };
   }
 
-  if(known_social_media_sites[hostname]){    
-    const currentDate = new Date();
-    if(is_restricted_time(currentDate)){
-      return {
-        cancel: true
-      }
+  if(known_social_media_sites[hostname] && url.pathname.length === 1){    
+    return {
+      cancel: true
     }
   }
-}
-
-function is_restricted_time(date){  
-  const hour = date.getHours();
-   
-  if(hour == 12 || (hour >= 6 && hour <= 8)){
-    return false;
-  }
-  
-  return true;
 }
 
 browser.webRequest.onBeforeRequest.addListener(
