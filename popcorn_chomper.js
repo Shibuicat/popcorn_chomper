@@ -24,9 +24,7 @@ const blockedDomainsObj = {
   "mangadna.com": true,
   "njavtv.com": true,
   "missav.ai": true,
-};
 
-const known_social_media_sites = {
   "reddit.com": true,
   "www.reddit.com": true,
   "youtube.com": true,
@@ -38,6 +36,21 @@ const known_social_media_sites = {
   "m.facebook.com": true,
   "instagram.com": true,
   "tiktok.com": true,
+  "www.instagram.com": true
+};
+
+const known_social_media_sites = {
+  // "reddit.com": true,
+  // "www.reddit.com": true,
+  // "youtube.com": true,
+  // "www.youtube.com": true,
+  // "m.youtube.com": true,
+  // "fb.com": true,
+  // "www.facebook.com": true,
+  // "facebook.com": true,
+  // "m.facebook.com": true,
+  // "instagram.com": true,
+  // "tiktok.com": true,
   "www.instagram.com": true
 }
 
@@ -57,7 +70,7 @@ const patterns = {
   nangcuc: true,
   jable: true,
   top1: true,
-  quaylen: true 
+  quaylen: true
 };
 
 function blockThumbnailImage(requestDetails) {
@@ -70,13 +83,13 @@ function blockThumbnailImage(requestDetails) {
   }
 
   const patternFoundIndex = Object.keys(patterns).findIndex(x => hostname.includes(x));
-  if(patternFoundIndex >= 0){
+  if (patternFoundIndex >= 0) {
     return {
       cancel: true
     };
   }
 
-  if(known_social_media_sites[hostname] && url.pathname.length === 1){    
+  if (known_social_media_sites[hostname] && url.pathname.length === 1) {
     return {
       cancel: true
     }
