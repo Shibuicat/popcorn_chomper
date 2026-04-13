@@ -36,7 +36,6 @@ const blockedDomainsObj = {
   "m.facebook.com": true,
   "instagram.com": true,
   "tiktok.com": true,
-  "www.instagram.com": true
 };
 
 const known_social_media_sites = {
