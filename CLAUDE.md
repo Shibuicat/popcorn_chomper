@@ -1,18 +1,54 @@
 # Popcorn Chomper
 
-A Firefox browser extension that blocks adult content, manga/manhwa sites, and social media sites using the `webRequest` API.
+A Firefox browser extension for mindfulness and self-control. It blocks adult content, manga/manhwa sites, and addictive social media feeds to reduce compulsive browsing. Built on the `webRequest` API.
+
+## Purpose & guiding principle
+
+This extension exists to support focused, intentional use of the internet by removing easy access to addictive or harmful content. The goal is not to make sites completely inaccessible, but to block the specific entry points and content types that trigger compulsive behaviour — infinite feeds, short-form video, adult content, and passive browsing.
+
+**When making implementation decisions, follow this principle:** block the addictive surface, preserve functional use. For example:
+- Instagram DMs (`/direct`) are allowed — messaging a friend is intentional. The feed is not.
+- Reddit discussions are allowed — reading a specific thread is intentional. The homepage feed is not.
+- YouTube videos are allowed — watching something specific is intentional. The homepage and Shorts feed are not.
+- Facebook is accessible for communication, but Reels and the homepage feed are blocked.
+
+Adult content and manga/manhwa sites have no functional use case here and are blocked entirely.
 
 ## How it works
 
-The extension intercepts all outgoing network requests via `browser.webRequest.onBeforeRequest` and cancels requests that match a blocked domain or pattern.
+The extension intercepts all outgoing network requests via `browser.webRequest.onBeforeRequest` and cancels requests that match a rule. Checks are evaluated in order — domain-only checks first, path/query checks second — so expensive URL parsing only happens after a domain match.
 
-There are three blocking mechanisms in `popcorn_chomper.js`:
+There are eight blocking mechanisms in `popcorn_chomper.js`:
 
-1. **Exact domain match** (`blockedDomainsObj`) — a hardcoded object of domains mapped to `true`. If the request hostname is in this object, the request is cancelled.
+1. **Private browsing full block** (`private_browsing_block`) — array of domain suffixes fully blocked when the request comes from a private browsing window (`cookieStoreId === "firefox-private"`). Checked before all other rules. Requires "Run in Private Windows" to be enabled in `about:addons`. Currently blocks `youtube.com` and all its subdomains in private mode.
 
-2. **Pattern match** (`patterns`) — a set of keyword strings. If the request hostname contains any of these keywords, the request is cancelled. Useful for catching variants and subdomains without listing every one explicitly (e.g. `porn` catches `pornhub.com`, `xporn.net`, etc).
+2. **Exact domain match** (`blockedDomainsObj`) — hardcoded domains mapped to `true`. Fully blocks all requests to that hostname. Used for adult/AV sites, manga sites, Twitter, and Reddit's video CDN (`v.redd.it`).
 
-3. **Social media root-only block** (`known_social_media_sites`) — blocks only the root path (`pathname.length === 1`) of known social media sites. This allows deep links to work while blocking the homepage/feed. Currently only `www.instagram.com` is active here.
+3. **Domain pattern match** (`domain_patterns`) — keyword strings checked against the hostname via `includes()`. Catches domain variants and subdomains without enumerating every one (e.g. `porn` catches `pornhub.com`, `xporn.net`, etc). Also covers TikTok via the `tiktok` keyword.
+
+4. **Domain suffix match** (`domain_suffix_rules`) — matches requests where the hostname ends with a given suffix. If `pathContains` is specified, also checks that the path contains that string. If omitted, all requests to that domain suffix are blocked. Used to block `.mp4` video files from `*.fbcdn.net` and to fully block all of `*.pixiv.net`.
+
+5. **Social media blocklist** (`social_media_blocklist`) — per-domain rules that block specific paths while allowing everything else. Supports two match types:
+   - `exact` — blocks if `pathname === p` (used for homepages `/`)
+   - `prefix` — blocks if `pathname.startsWith(p)` (used for `/shorts/`, `/reel/`)
+
+   Currently active:
+   - Reddit — blocks homepage only; `v.redd.it` is fully blocked via `blockedDomainsObj`
+   - YouTube — blocks homepage and `/shorts/`
+   - Facebook — blocks homepage and `/reel/`
+
+6. **Search query filter** (`search_query_rules`) — array of rules with a `suffix` (top domain) and `param` (query parameter name). Matches any subdomain of the suffix, so a single entry covers `www.`, `m.`, and any other subdomain. If the lowercased query value contains any keyword from `search_patterns`, the request is cancelled. `URLSearchParams.get()` automatically decodes `+` and `%20` to spaces, so phrase matching works correctly regardless of encoding. Currently active for `google.com` (`q`), `youtube.com` (`search_query`), `reddit.com` (`q`), and `facebook.com` (`q`).
+
+7. **Post slug filter** (`path_slug_filter_rules`) — array of rules with a `suffix` and a `pathRegex` with a capture group that extracts the slug from the URL path. Underscores in the slug are replaced with spaces before matching, so multi-word phrase keywords work correctly. Currently active for Reddit post URLs (`/r/{sub}/comments/{id}/{slug}/`).
+
+8. **Social media allowlist** (`social_media_allowlist`) — inverse of the blocklist. Blocks everything on a domain EXCEPT the listed path prefixes. Used for Instagram: only `/direct`, `/api/graphql`, `/rupload_igphoto`, and `/api/v1/discover/web/explore_grid` are allowed through.
+
+## Keyword lists
+
+- `domain_patterns` — keywords matched against hostnames for domain blocking. Covers adult content terms, manga/manhwa, JAV, and Vietnamese adult site patterns.
+- `search_patterns` — keywords matched against search query strings. Broader than `domain_patterns` — includes terms that appear in searches but not in domain names (e.g. `pantyhose`, `uncensored`, `rule34`). These two lists are intentionally separate. Supports single words and multi-word phrases (e.g. `"croming fancam"`).
+
+**Guiding rule for `search_patterns`:** block distraction and adult content, not offensive content. A term like `sex` or `naked` can appear in legitimate educational, medical, or news searches — don't add broad terms just because they can appear in adult contexts. Prefer specific terms (JAV codes, site names, niche content labels) that rarely appear outside the content you're targeting.
 
 ## File structure
 
@@ -58,6 +94,12 @@ sudo ./setup_dns.sh
 
 ## Adding new blocks
 
-- To block a specific domain: add it to `blockedDomainsObj`
-- To block a category of sites by keyword: add the keyword to `patterns`
-- To block only the root of a social media site: add it to `known_social_media_sites`
+- **Fully block a domain**: add to `blockedDomainsObj`
+- **Block all variants of a site category**: add a keyword to `domain_patterns`
+- **Block specific paths on a social media site**: add to `social_media_blocklist` with `exact` and/or `prefix` arrays
+- **Allow only specific paths on a domain**: add to `social_media_allowlist` with an array of allowed path prefixes
+- **Block a domain in private browsing only**: add its suffix to `private_browsing_block`
+- **Block all requests to a top domain**: add `{ suffix }` to `domain_suffix_rules`
+- **Block a CDN by domain suffix + path content**: add `{ suffix, pathContains }` to `domain_suffix_rules`
+- **Filter post/page slugs by keyword**: add a `{ suffix, pathRegex, captureGroup }` entry to `path_slug_filter_rules`
+- **Block search queries on a search engine**: add a `{ suffix, param }` entry to `search_query_rules` and the keyword to `search_patterns`
