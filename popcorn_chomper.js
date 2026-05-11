@@ -115,71 +115,64 @@ const search_patterns = {
   fancam: true,
 };
 
-function blockThumbnailImage(requestDetails) {
-  const url = URL.parse(requestDetails.url);
-  const hostname = url.hostname;
-  if (blockedDomainsObj[hostname]) {
-    return {
-      cancel: true,
-    };
-  }
+function shouldBlock(url, cookieStoreId) {
+  const parsed = URL.parse(url);
+  if (!parsed) return false;
 
-  if (requestDetails.cookieStoreId === "firefox-private") {
+  const hostname = parsed.hostname;
+
+  if (blockedDomainsObj[hostname]) return true;
+
+  if (cookieStoreId === "firefox-private") {
     for (const suffix of private_browsing_block) {
-      if (hostname === suffix || hostname.endsWith(`.${suffix}`)) {
-        return { cancel: true };
-      }
+      if (hostname === suffix || hostname.endsWith(`.${suffix}`)) return true;
     }
   }
 
-  const patternFoundIndex = Object.keys(domain_patterns).findIndex(x => hostname.includes(x));
-  if (patternFoundIndex >= 0) {
-    return {
-      cancel: true
-    };
-  }
+  if (Object.keys(domain_patterns).some(x => hostname.includes(x))) return true;
 
   for (const rule of domain_suffix_rules) {
     if (hostname === rule.suffix || hostname.endsWith(`.${rule.suffix}`)) {
-      if (!rule.pathContains || url.pathname.includes(rule.pathContains)) {
-        return { cancel: true };
-      }
+      if (!rule.pathContains || parsed.pathname.includes(rule.pathContains)) return true;
     }
   }
 
   const blockedPaths = social_media_blocklist[hostname];
   if (blockedPaths) {
     const isBlocked =
-      blockedPaths.exact?.some(p => url.pathname === p) ||
-      blockedPaths.prefix?.some(p => url.pathname.startsWith(p));
-    if (isBlocked) return { cancel: true };
+      blockedPaths.exact?.some(p => parsed.pathname === p) ||
+      blockedPaths.prefix?.some(p => parsed.pathname.startsWith(p));
+    if (isBlocked) return true;
   }
 
   for (const rule of search_query_rules) {
     if (hostname === rule.suffix || hostname.endsWith(`.${rule.suffix}`)) {
-      const q = url.searchParams.get(rule.param)?.toLowerCase();
-      if (q && Object.keys(search_patterns).some(word => q.includes(word))) {
-        return { cancel: true };
-      }
+      const q = parsed.searchParams.get(rule.param)?.toLowerCase();
+      if (q && Object.keys(search_patterns).some(word => q.includes(word))) return true;
     }
   }
 
   for (const rule of path_slug_filter_rules) {
     if (hostname === rule.suffix || hostname.endsWith(`.${rule.suffix}`)) {
-      const match = url.pathname.match(rule.pathRegex);
+      const match = parsed.pathname.match(rule.pathRegex);
       if (match) {
         const slug = match[rule.captureGroup].replace(/_/g, " ");
-        if (Object.keys(search_patterns).some(word => slug.includes(word))) {
-          return { cancel: true };
-        }
+        if (Object.keys(search_patterns).some(word => slug.includes(word))) return true;
       }
     }
   }
 
   const allowedPaths = social_media_allowlist[hostname];
   if (allowedPaths) {
-    const isAllowed = allowedPaths.some(p => url.pathname.startsWith(p));
-    if (!isAllowed) return { cancel: true };
+    if (!allowedPaths.some(p => parsed.pathname.startsWith(p))) return true;
+  }
+
+  return false;
+}
+
+function blockThumbnailImage(requestDetails) {
+  if (shouldBlock(requestDetails.url, requestDetails.cookieStoreId)) {
+    return { cancel: true };
   }
 }
 
@@ -188,3 +181,10 @@ browser.webRequest.onBeforeRequest.addListener(
   { urls: ["<all_urls>"] },
   ["blocking"],
 );
+
+browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (!changeInfo.url) return;
+  if (shouldBlock(changeInfo.url, tab.cookieStoreId)) {
+    browser.tabs.goBack(tabId);
+  }
+});
